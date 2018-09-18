@@ -143,6 +143,7 @@ void Object::createTrackbars() {
 	//and the function that is called whenever the trackbar is moved(eg. on_trackbar)
 	//                                  ---->    ---->     ---->
 	cv::createTrackbar("H_MIN", trackbarWindowName, &H_MIN_init, H_MAX, on_trackbar);
+	cv::createTrackbar("H_MIN", trackbarWindowName, &H_MIN_init, H_MAX, on_trackbar);
 	cv::createTrackbar("H_MAX", trackbarWindowName, &H_MAX_init, H_MAX, on_trackbar);
 	cv::createTrackbar("S_MIN", trackbarWindowName, &S_MIN_init, S_MAX, on_trackbar);
 	cv::createTrackbar("S_MAX", trackbarWindowName, &S_MAX_init, S_MAX, on_trackbar);
@@ -151,15 +152,40 @@ void Object::createTrackbars() {
 }
 
 void Object::position(int x, int y) {
-	point.x = x;
-	point.y = y;
+	cv::Point p(x, y);
+	PointTable.insert(pair<string, cv::Point>("Center", p));
 }
 
+void Object::LRposition(int MaxX, int MaxY, int MinX, int MinY) {
+	float OffsetX = (MaxX - MaxY) / 4;
+	float OffsetY = (MinX - MinY) / 4;
+	cv::Point RUpoint;
+	cv::Point RDpoint;
+	cv::Point LUpoint;
+	cv::Point LDpoint;
+
+	RUpoint.x = MaxX - OffsetX;
+	RUpoint.y = MinY + OffsetY;
+	RDpoint.x = MaxX - OffsetX;
+	RDpoint.y = MaxY - OffsetY;
+	LUpoint.x = MinX + OffsetX;
+	LUpoint.y = MinY + OffsetY;
+	LDpoint.x = MinX + OffsetX;
+	LDpoint.y = MaxY - OffsetY;
+
+	PointTable.insert(pair<string, cv::Point>("RightUpper", RUpoint));
+	PointTable.insert(pair<string, cv::Point>("RightDown", RDpoint));
+	PointTable.insert(pair<string, cv::Point>("LeftUpper", LUpoint));
+	PointTable.insert(pair<string, cv::Point>("LeftDown", LDpoint));
+}
+
+std::map<string, cv::Point> Object::GetPointTable() {
+	return PointTable;
+}
 
 void Object::drawObject(vector<Object> theObjects, cv::Mat &frame) {
 	int array[2] = { 0, 0 };
 	for (int i = 0; i<theObjects.size(); i++) {
-
 		cv::circle(frame, cv::Point(theObjects.at(i).getXPos(), theObjects.at(i).getYPos()), 10, cv::Scalar(0, 0, 255));
 		cv::putText(frame, intToString(theObjects.at(i).getXPos()) + " , " + intToString(theObjects.at(i).getYPos()), cv::Point(theObjects.at(i).getXPos(), theObjects.at(i).getYPos() + 20), 1, 1, cv::Scalar(0, 255, 0));
 		cv::putText(frame, theObjects.at(i).getType(), cv::Point(theObjects.at(i).getXPos(), theObjects.at(i).getYPos() - 30), 1, 2, theObjects.at(i).getColor());
@@ -183,6 +209,7 @@ void Object::morphOps(cv::Mat &thresh) {
 }
 void Object::trackFilteredObject(cv::Mat threshold, cv::Mat HSV, cv::Mat &cameraFeed)
 {
+	int contoursMaxX = 0, contoursMaxY = 0, contoursMinX = 19200, contoursMinY = 1080;
 	vector <Object> objects;
 	cv::Mat temp;
 	threshold.copyTo(temp);
@@ -200,7 +227,28 @@ void Object::trackFilteredObject(cv::Mat threshold, cv::Mat HSV, cv::Mat &camera
 		if (numObjects<MAX_NUM_OBJECTS)
 		{
 			for (int index = 0; index >= 0; index = hierarchy[index][0])
-			{
+			{	
+				for (int i = 0; i < contours[index].size(); i++) {
+					if (contoursMaxX < contours[index][i].x) {
+						contoursMaxX = contours[index][i].x;
+					}
+					if (contoursMaxY < contours[index][i].y) {
+						contoursMaxY  =  contours[index][i].y;
+					}
+					if (contoursMinX > contours[index][i].x) {
+						contoursMinX = contours[index][i].x;
+					}
+					if (contoursMinY > contours[index][i].y) {
+						contoursMinY = contours[index][i].y;
+					}
+				}
+				/*std::cout << "1.contoursMaxX: " << contoursMaxX << std::endl;
+				std::cout << "2.contoursMaxY: " << contoursMaxY << std::endl;
+				std::cout << "1.contoursMinX: " << contoursMinX << std::endl;
+				std::cout << "2.contoursMinY: " << contoursMinY << std::endl;*/
+
+				LRposition(contoursMaxX, contoursMaxY, contoursMinX, contoursMinY);
+				
 				cv::Moments moment = moments((cv::Mat)contours[index]);
 				double area = moment.m00;
 				//if the area is less than 20 px by 20px then it is probably just noise
@@ -272,3 +320,5 @@ void Object::mainProgram(cv::Mat cameraFeed) {
 	//delay 30ms so that screen can refresh.
 	//image will not appear without this waitKey() command
 }
+
+

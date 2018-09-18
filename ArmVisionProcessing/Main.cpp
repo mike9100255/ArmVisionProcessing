@@ -1,5 +1,6 @@
 #include "FindColor.h"
 #include "KinectV2.h"
+#include "TcpClient.h"
 
 #define PI 3.1415926
 void GetArmAngle(cv::Point3d Apos, cv::Point3d Bpos, cv::Point3d Cpos);
@@ -9,6 +10,25 @@ float ArmCode[5];
 int main() {
 	KinectV2 cap;
 	Object RednWood;
+	TcpClient Client;
+
+	cv::Mat ColorImg;
+	cv::Mat MapImg;
+	cv::Point2d goal;
+	cv::Point2d goal_LU;
+	cv::Point2d goal_LD;
+	cv::Point2d goal_RU;
+	cv::Point2d goal_RD;
+
+	cv::Point3f GoalWorld;
+	cv::Point3f GoalWorld_LU;
+	cv::Point3f GoalWorld_LD;
+	cv::Point3f GoalWorld_RU;
+	cv::Point3f GoalWorld_RD;
+
+	Client.InitSocket();
+
+	Client.ConnectSocket("127.0.0.1", 4568);
 
 	bool flag = true;
 	RednWood.createTrackbars();
@@ -19,40 +39,57 @@ int main() {
 
 	while (flag) {
 
-		cv::Mat ColorImg;
-		cv::Mat MapImg;
-		cv::Point2d goal;
-		cv::Point3f GoalWorld;
-		cv::Point3f GoalWorld_B;
-		cv::Point3f GoalWorld_C;
-
 		cap.ColorUpdate();
 		cap.DepthUpdate();
-		//cap.ColorFrameToCameraSpace();
+		
 		if (!cap.GetColorImg().empty()) {
 			ColorImg = cap.GetColorImg();
 			RednWood.mainProgram(ColorImg);
-			/*MapImg = cap.GetPointCloudImg();
-			imshow("123", MapImg);*/
+		}
+
+		if (Client.ReceiveData()) {
+			//Client.GetData();
+
+			//Client.SendData();
 		}
 
 		int key = cv::waitKey(1);
 		switch (key)
 		{
 		case'r':
-			goal = RednWood.GetPoint();
-			cap.WorldPosition(goal.x, goal.y);
-			GoalWorld = cap.GetWorldPos();
-			cap.WorldPosition(goal.x + 1, goal.y - 1);
-			GoalWorld_B = cap.GetWorldPos();
-			cap.WorldPosition(goal.x + 1, goal.y + 1);
-			std::cout << GoalWorld.x << "," << GoalWorld.y << "," << GoalWorld.z << std::endl;
-			GoalWorld_C = cap.GetWorldPos();
-			GetArmAngle(GoalWorld, GoalWorld_B, GoalWorld_C);
+			/*goal = RednWood.GetPoint();*/
+			//cap.PointTable = RednWood.GetPointTable();
+			/*cap.WorldPosition(goal.x, goal.y);
+			GoalWorld = cap.GetWorldPos();*/
+			//cap.Finalangle();
+			/*goal_LU = RednWood.GetLUPoint();
+			goal_LD = RednWood.GetLDPoint();
+			goal_RU = RednWood.GetRUPoint();
+			goal_RD = RednWood.GetRDPoint();*/
+			/*cap.WorldPosition(goal_LU.x, goal_LU.y);
+			GoalWorld_LU = cap.GetWorldPos();
+			cap.WorldPosition(goal_LD.x, goal_LD.y);
+			GoalWorld_LD = cap.GetWorldPos();
+			cap.WorldPosition(goal_RU.x, goal_RU.y);
+			GoalWorld_RU = cap.GetWorldPos();
+			cap.WorldPosition(goal_RD.x, goal_RD.y);
+			GoalWorld_RD = cap.GetWorldPos();*/
+
+			/*std::cout << GoalWorld.x << "," << GoalWorld.y << "," << GoalWorld.z << std::endl;
 			
-			std::cout << "R¨¤: " << ArmCode[0] << " , " << "phi¨¤: " << ArmCode[1] << "®y¼Ð¡G ("
-				<< ArmCode[2] << ", " << ArmCode[3] << ", " << ArmCode[4] << ")" << std::endl;
+			cap.GetArmAngle(GoalWorld, GoalWorld_LU, GoalWorld_LD);*/
+			//ArmCode = cap.GetArmCode();
+			/*std::cout << "R¨¤: " << ArmCode[0] << " , " << "phi¨¤: " << ArmCode[1] << "®y¼Ð¡G ("
+				<< ArmCode[2] << ", " << ArmCode[3] << ", " << ArmCode[4] << ")" << std::endl;*/
 			break;
+
+		case'w':
+			
+			if (!cap.GetColorImg().empty()) {
+				ColorImg = cap.GetColorImg();
+				cv::imwrite("testimag.png", ColorImg);
+				
+			}
 		default:
 			break;
 		}

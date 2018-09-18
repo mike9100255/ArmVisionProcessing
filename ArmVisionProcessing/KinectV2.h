@@ -2,9 +2,12 @@
 #include <Kinect.h>
 #include <opencv2/core.hpp>
 #include <thread>
-
+#include <map>
 class KinectV2{
 public:
+
+	//std::map<string, cv::Point> PointTable;
+
 	KinectV2();
 	~KinectV2();
 
@@ -20,8 +23,12 @@ public:
 	void DepthFrameToColorSpace();
 	void DepthFrameToCameraSpace();
 
+	void GetArmAngle(cv::Point3d Apos, cv::Point3d Bpos, cv::Point3d Cpos);
+	void Finalangle();
 	void WorldPosition(int x, int y);
 	void GetFPS(cv::Mat img, double t);
+	
+	float* GetArmCode();
 	int GetDepthMax();
 
 	cv::Mat GetDepthImg();
@@ -31,6 +38,7 @@ public:
 	cv::Mat GetPointCloudImg();
 	cv::Mat GetMapperImg();
 	cv::Point3f GetWorldPos();
+
 	void close();
 
 private:
@@ -48,6 +56,12 @@ private:
 	USHORT mDepthMin = 0;
 	USHORT mDepthMax = USHRT_MAX;
 
+	float ArmCode[5];
+	float RR;
+	float LR;
+	float Rphi;
+	float Lphi;
+
 	cv::Mat mDepthImg;
 	cv::Mat mColorImg;
 	cv::Mat mIRImg;
@@ -56,6 +70,7 @@ private:
 	cv::Mat mPointCloud;
 
 	cv::Point3f WorldPos;
+	
 
 	std::thread m_ThreadDepth;
 	std::thread m_ThreadColor;

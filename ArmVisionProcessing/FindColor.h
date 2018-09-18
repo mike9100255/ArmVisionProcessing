@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <map>
 #include <opencv2\core.hpp>
 #include <opencv2\imgproc.hpp>
 #include <opencv2\highgui.hpp>
@@ -32,6 +33,7 @@ public:
 	string intToString(int number);
 	void createTrackbars();
 	void position(int x, int y);
+	void LRposition(int MaxX, int MaxY, int MinX, int MinY);
 	void drawObject(vector<Object> theObjects, cv::Mat &frame);
 	void morphOps(cv::Mat &thresh);
 	void trackFilteredObject(cv::Mat threshold, cv::Mat HSV, cv::Mat &cameraFeed);
@@ -45,10 +47,8 @@ public:
 		return Color;
 	}
 
-	
-	cv::Point GetPoint() {
-		return point;
-	}
+	std::map<string, cv::Point> GetPointTable();
+
 	void setColor(cv::Scalar c) {
 
 		Color = c;
@@ -75,15 +75,14 @@ public:
 	const int FRAME_HEIGHT = 480;
 
 private:
-
+	
 	int xPos, yPos;
 	string type;
 	cv::Scalar HSVmin, HSVmax;
 	cv::Scalar Color;
 
-	cv::Point point;
-	
-	
+	std::map<string, cv::Point> PointTable;
+
 	//max number of objects to be detected in frame
 	const int MAX_NUM_OBJECTS = 50;
 	//minimum and maximum object area

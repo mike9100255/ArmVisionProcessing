@@ -393,6 +393,33 @@ void KinectV2::ColorFrameToCameraSpace() {
 	merge(output, mPointCloud);
 }
 
+
+void KinectV2::GetArmAngle(cv::Point3d Apos, cv::Point3d Bpos, cv::Point3d Cpos) {
+
+	float ax = Apos.x, ay = Apos.y, az = Apos.z;
+	float bx = Bpos.x, by = Bpos.y, bz = Bpos.z;
+	float cx = Cpos.x, cy = Cpos.y, cz = Cpos.z;
+	std::cout << "A: " << ax << "," << ay << "," << az << std::endl;
+	std::cout << "A: " << bx << "," << by << "," << bz << std::endl;
+	std::cout << "A: " << cx << "," << cy << "," << cz << std::endl;
+	float abx = bx - ax, aby = by - ay, abz = bz - az;
+	float acx = cx - ax, acy = cy - ay, acz = cz - az;
+
+	int normalx = aby * acz - abz * acy;
+	int normaly = abz * acx - abx * acz;
+	int normalz = abx * acy - aby * acx;
+	std::cout << normalx << "," << normaly << "," << normalz << std::endl;
+	float R = atan2(normalz, sqrt(normalx * normalx + normaly * normaly)) * 180 / PI;
+	float phi = atan2(normaly, normalx) * 180 / PI;
+
+	std::cout << "R角: " << R << " , " << "phi角: " << phi << std::endl;
+
+	ArmCode[0] = R;
+	ArmCode[1] = phi;
+	ArmCode[2] = Apos.x;
+	ArmCode[3] = Apos.y;
+	ArmCode[4] = Apos.z;
+}
 //get World position
 void KinectV2::WorldPosition(int x, int y) {
 	int size = mColorImg.rows * mColorImg.cols;
@@ -474,6 +501,19 @@ void KinectV2::WorldPosition(int x, int y) {
 	WorldPos.z = outputpoint[2][0];
 }
 
+void KinectV2::Finalangle() {
+	/*cv::Point Center;
+	map<string, cv::Point>::iterator iter;
+	PointTable.value_comp();
+	iter = PointTable.find("Center");
+	Center = iter->swap;
+	std::cout << Center << std::endl;
+	PointTable.find("RightUpper");
+	PointTable.find("RightDown");
+	PointTable.find("LeftUpper");
+	PointTable.find("LeftDown");*/
+}
+
 void KinectV2::GetFPS(cv::Mat img, double t) {
 	/*主程式要加
 	//t = (double)cv::getTickCount();
@@ -490,6 +530,10 @@ void KinectV2::GetFPS(cv::Mat img, double t) {
 
 		cv::putText(img, fpsString, cv::Point(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
 	}
+}
+
+float* KinectV2::GetArmCode() {
+	return ArmCode;
 }
 
 int KinectV2::GetDepthMax() {
